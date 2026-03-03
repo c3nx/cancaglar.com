@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { serveStatic } from "hono/bun";
+import { basicAuth } from "hono/basic-auth";
 import { readFile, writeFile, mkdir, unlink } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
@@ -9,6 +10,16 @@ const app = new Hono();
 const DATA_DIR = "./data";
 const UPLOAD_DIR = "./uploads";
 const PORTFOLIO_FILE = join(DATA_DIR, "portfolio.json");
+
+// ─── AUTH (protects dashboard + write endpoints) ───
+const auth = basicAuth({
+  username: process.env.DASHBOARD_USER!,
+  password: process.env.DASHBOARD_PASS!,
+});
+
+app.use("/dashboard.html", auth);
+app.post("/api/*", auth);
+app.delete("/api/*", auth);
 
 // Ensure directories exist
 await mkdir(DATA_DIR, { recursive: true });
