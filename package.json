@@ -1,0 +1,12 @@
+{
+  "name": "cancaglar.com",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun run --hot server.ts",
+    "start": "bun run server.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.0"
+  }
+}

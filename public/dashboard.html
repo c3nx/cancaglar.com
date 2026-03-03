@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can Çağlar Bad - Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #111;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* ─── TOP BAR ─── */
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 30px; background: #1a1a1a;
+            border-bottom: 1px solid #2a2a2a;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .topbar h1 { font-size: 1rem; font-weight: 500; color: #c9a96e; letter-spacing: 0.05em; }
+        .topbar-actions { display: flex; gap: 10px; }
+        .btn {
+            padding: 8px 18px; border: 1px solid #333; border-radius: 6px;
+            background: #222; color: #ccc; font-size: 0.8rem; font-family: inherit;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn:hover { background: #2a2a2a; border-color: #444; }
+        .btn-primary { background: #c9a96e; color: #111; border-color: #c9a96e; font-weight: 500; }
+        .btn-primary:hover { background: #d4b87a; }
+        .btn-danger { color: #e74c3c; border-color: #e74c3c33; }
+        .btn-danger:hover { background: #e74c3c15; }
+
+        /* ─── LAYOUT ─── */
+        .main { display: flex; height: calc(100vh - 57px); }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+            width: 280px; background: #161616; border-right: 1px solid #2a2a2a;
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
+        .sidebar-header {
+            padding: 15px; border-bottom: 1px solid #2a2a2a;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sidebar-header h2 {
+            font-size: 0.75rem; font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #888;
+        }
+        .item-count {
+            font-size: 0.7rem; color: #555; background: #222;
+            padding: 2px 8px; border-radius: 10px;
+        }
+        .sidebar-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px;
+            border-radius: 6px; cursor: pointer; transition: background 0.15s ease;
+            margin-bottom: 4px;
+        }
+        .sidebar-item:hover { background: #1e1e1e; }
+        .sidebar-item.active { background: #252218; border: 1px solid #c9a96e33; }
+        .sidebar-item .thumb {
+            width: 44px; height: 44px; border-radius: 4px;
+            background: #222; object-fit: cover; flex-shrink: 0;
+        }
+        .sidebar-item .thumb-placeholder {
+            width: 44px; height: 44px; border-radius: 4px; background: #222;
+            display: flex; align-items: center; justify-content: center;
+            color: #444; font-size: 1.2rem; flex-shrink: 0;
+        }
+        .sidebar-item .item-meta { flex: 1; overflow: hidden; }
+        .sidebar-item .item-title {
+            font-size: 0.8rem; font-weight: 500; color: #ddd;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sidebar-item .item-badge { font-size: 0.6rem; color: #888; margin-top: 2px; }
+        .sidebar-item .drag-handle { color: #444; cursor: grab; font-size: 0.9rem; padding: 0 2px; }
+        .sidebar-item .drag-handle:active { cursor: grabbing; }
+        .sidebar-item.dragging { opacity: 0.4; }
+        .sidebar-item.drag-over { border-top: 2px solid #c9a96e; }
+
+        .sidebar-footer { padding: 12px; border-top: 1px solid #2a2a2a; }
+        .btn-add {
+            width: 100%; padding: 10px; background: #1a1a1a;
+            border: 1px dashed #333; color: #888; border-radius: 6px;
+            font-size: 0.8rem; font-family: inherit; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-add:hover { border-color: #c9a96e; color: #c9a96e; }
+
+        /* ─── EDITOR ─── */
+        .editor { flex: 1; overflow-y: auto; padding: 30px 40px; }
+        .editor-empty {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; height: 100%; color: #444;
+        }
+        .editor-empty .empty-icon { font-size: 3rem; margin-bottom: 15px; }
+        .editor-empty p { font-size: 0.9rem; }
+
+        .field { margin-bottom: 24px; }
+        .field label {
+            display: block; font-size: 0.7rem; font-weight: 500;
+            text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 8px;
+        }
+        .field input[type="text"], .field textarea {
+            width: 100%; padding: 10px 14px; background: #1a1a1a;
+            border: 1px solid #2a2a2a; border-radius: 6px; color: #e0e0e0;
+            font-family: inherit; font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+        }
+        .field input:focus, .field textarea:focus { border-color: #c9a96e55; }
+        .field textarea { min-height: 70px; resize: vertical; }
+
+        /* Image upload */
+        .image-upload {
+            border: 2px dashed #2a2a2a; border-radius: 8px; padding: 30px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+            position: relative; overflow: hidden;
+        }
+        .image-upload:hover { border-color: #c9a96e55; }
+        .image-upload.has-image { padding: 0; border-style: solid; }
+        .image-upload .upload-text { color: #555; font-size: 0.85rem; }
+        .image-upload .upload-text span { color: #c9a96e; text-decoration: underline; }
+        .image-upload img {
+            width: 100%; max-height: 400px; object-fit: contain;
+            display: block; border-radius: 6px;
+        }
+        .image-upload input[type="file"] { display: none; }
+        .image-upload .remove-img {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,0.7); border: 1px solid #444;
+            color: #ccc; width: 28px; height: 28px; border-radius: 50%;
+            cursor: pointer; font-size: 0.8rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Story lines */
+        .story-lines { margin-top: 8px; }
+        .story-line-row {
+            display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px;
+            background: #1a1a1a; border: 1px solid #222; border-radius: 6px; padding: 12px;
+        }
+        .story-line-row .line-num { font-size: 0.7rem; color: #c9a96e; font-weight: 600; min-width: 20px; padding-top: 3px; }
+        .story-line-row .line-fields { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .story-line-row input {
+            padding: 6px 10px; background: #222; border: 1px solid #2a2a2a;
+            border-radius: 4px; color: #e0e0e0; font-family: inherit; font-size: 0.8rem; outline: none;
+        }
+        .story-line-row input:focus { border-color: #c9a96e44; }
+        .story-line-row input.label-input { width: 120px; color: #c9a96e; font-size: 0.7rem; }
+        .story-line-row .remove-line {
+            background: none; border: none; color: #555; cursor: pointer;
+            font-size: 0.9rem; padding: 2px 4px;
+        }
+        .story-line-row .remove-line:hover { color: #e74c3c; }
+        .btn-add-line {
+            background: none; border: 1px dashed #333; color: #666; padding: 8px;
+            width: 100%; border-radius: 6px; font-family: inherit; font-size: 0.75rem;
+            cursor: pointer; margin-top: 5px;
+        }
+        .btn-add-line:hover { border-color: #c9a96e; color: #c9a96e; }
+
+        .editor-actions {
+            display: flex; gap: 10px; margin-top: 30px; padding-top: 20px;
+            border-top: 1px solid #2a2a2a;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px; padding: 12px 22px;
+            background: #c9a96e; color: #111; font-size: 0.85rem; font-weight: 500;
+            border-radius: 8px; z-index: 9999; opacity: 0; transform: translateY(10px);
+            transition: all 0.3s ease; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
+        /* Position picker */
+        .position-picker { display: flex; gap: 8px; }
+        .pos-btn {
+            flex: 1; padding: 10px 16px; border: 1px solid #2a2a2a; border-radius: 6px;
+            background: #1a1a1a; color: #888; font-family: inherit; font-size: 0.8rem;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .pos-btn:hover { border-color: #444; color: #ccc; }
+        .pos-btn.selected { border-color: #c9a96e; background: #252218; color: #e0e0e0; }
+        .pos-btn .pos-icon { font-size: 1.1rem; }
+
+        /* Sidebar video badge */
+        .thumb-wrap { position: relative; flex-shrink: 0; }
+        .thumb-wrap .thumb-play {
+            position: absolute; bottom: 2px; right: 2px;
+            background: rgba(0,0,0,0.75); color: #fff;
+            width: 16px; height: 16px; border-radius: 50%;
+            font-size: 0.4rem; display: flex;
+            align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+
+        /* Hover preview */
+        .preview-section {
+            margin-top: 30px; padding-top: 20px; border-top: 1px solid #2a2a2a;
+        }
+        .preview-section > label {
+            display: block; font-size: 0.7rem; font-weight: 500;
+            text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 12px;
+        }
+        .preview-card {
+            position: relative; max-width: 380px;
+            border-radius: 8px; overflow: hidden; cursor: pointer;
+        }
+        .preview-card img { width: 100%; display: block; }
+        .preview-card video {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .preview-card:hover video.ready { opacity: 1; }
+        .preview-card .preview-hint {
+            position: absolute; bottom: 10px; left: 10px;
+            background: rgba(0,0,0,0.6); color: #fff;
+            padding: 5px 12px; border-radius: 16px;
+            font-size: 0.65rem; letter-spacing: 0.08em;
+            pointer-events: none; transition: opacity 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        .preview-card:hover .preview-hint { opacity: 0; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <h1>CAN ÇAĞLAR BAD &middot; Dashboard</h1>
+    <div class="topbar-actions">
+        <button class="btn" onclick="exportData()">Dışa Aktar (JSON)</button>
+        <label class="btn" style="cursor:pointer">İçe Aktar<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+        <a href="/" target="_blank" class="btn btn-primary">Siteyi Önizle →</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Çalışmalar</h2>
+            <span class="item-count" id="itemCount">0</span>
+        </div>
+        <div class="sidebar-list" id="sidebarList"></div>
+        <div class="sidebar-footer">
+            <button class="btn-add" onclick="addNewItem()">+ Yeni Çalışma Ekle</button>
+        </div>
+    </div>
+
+    <div class="editor" id="editorPanel">
+        <div class="editor-empty" id="editorEmpty">
+            <div class="empty-icon">&#10022;</div>
+            <p>Düzenlemek için sol panelden bir çalışma seç<br>veya yeni bir tane ekle</p>
+        </div>
+        <div id="editorForm" style="display:none">
+            <div class="field">
+                <label>Görsel</label>
+                <div class="image-upload" id="imageUpload" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-text" id="uploadText">
+                        Sürükle bırak veya <span>dosya seç</span><br>
+                        <small style="color:#444">JPG, PNG — max 5MB</small>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*">
+                    <img id="imagePreview" style="display:none">
+                    <button class="remove-img" id="removeImg" style="display:none" onclick="removeImage(event)">&#10005;</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Video <span style="color:#555; text-transform:none; letter-spacing:0">— üzerine gelince oynatılır (opsiyonel)</span></label>
+                <div class="image-upload" id="videoUpload" onclick="document.getElementById('fileInputVideo').click()">
+                    <div class="upload-text" id="uploadTextVideo">
+                        Sürükle bırak veya <span>dosya seç</span><br>
+                        <small style="color:#444">MP4, WebM — max 50MB</small>
+                    </div>
+                    <input type="file" id="fileInputVideo" accept="video/mp4,video/webm">
+                    <video id="videoPreview" style="display:none; width:100%; max-height:300px; border-radius:6px;" muted controls></video>
+                    <button class="remove-img" id="removeVideoBtn" style="display:none" onclick="removeVideo(event)">&#10005;</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Başlık</label>
+                <input type="text" id="inputTitle" placeholder="ör: Doğal Dalgalar">
+            </div>
+
+            <div class="field">
+                <label>Alt Başlık <span style="color:#555; text-transform:none; letter-spacing:0">(opsiyonel)</span></label>
+                <input type="text" id="inputSubtitle" placeholder="ör: Ruhunu saçına işle">
+            </div>
+
+            <div class="field">
+                <label>Görsel Pozisyonu</label>
+                <div class="position-picker" id="positionPicker">
+                    <button class="pos-btn selected" data-pos="left" onclick="selectPosition('left')">
+                        <span class="pos-icon">&#9703;</span> Sol
+                    </button>
+                    <button class="pos-btn" data-pos="right" onclick="selectPosition('right')">
+                        Sağ <span class="pos-icon">&#9704;</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Açıklama Metinleri <span style="color:#555; text-transform:none; letter-spacing:0">— görselin yanında görünür</span></label>
+                <div class="story-lines" id="storyLines"></div>
+                <button class="btn-add-line" onclick="addStoryLine()">+ Satır Ekle</button>
+            </div>
+
+            <div class="editor-actions">
+                <button class="btn btn-primary" onclick="saveCurrentItem()">Kaydet</button>
+                <button class="btn btn-danger" onclick="deleteCurrentItem()">Sil</button>
+            </div>
+
+            <div class="preview-section" id="previewSection" style="display:none">
+                <label>Hover Önizleme <span style="color:#555; text-transform:none; letter-spacing:0">— sitede böyle görünecek</span></label>
+                <div class="preview-card" id="previewCard">
+                    <img id="previewImg" src="">
+                    <video id="previewVid" muted loop playsinline></video>
+                    <div class="preview-hint">&#9654; hover ile test et</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───
+let items = [];
+let activeId = null;
+
+// ─── API HELPERS ───
+async function loadItems() {
+    try {
+        const res = await fetch('/api/portfolio');
+        items = await res.json();
+    } catch { items = []; }
+}
+
+async function saveItems() {
+    await fetch('/api/portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+    });
+}
+
+async function uploadFile(file, type) {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('type', type);
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    return data.url;
+}
+
+async function deleteFile(url) {
+    if (!url) return;
+    await fetch('/api/upload/' + url.replace('/uploads/', ''), { method: 'DELETE' });
+}
+
+// ─── INIT ───
+async function init() {
+    await loadItems();
+    renderSidebar();
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function genId() {
+    return 'item_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+}
+
+// ─── SIDEBAR ───
+function renderSidebar() {
+    const list = document.getElementById('sidebarList');
+    document.getElementById('itemCount').textContent = items.length;
+
+    list.innerHTML = items.map((item, i) => `
+        <div class="sidebar-item ${item.id === activeId ? 'active' : ''}"
+             data-id="${item.id}" data-index="${i}"
+             draggable="true"
+             onclick="selectItem('${item.id}')">
+            <span class="drag-handle" title="Sürükle">&#10303;</span>
+            ${item.image
+                ? `<div class="thumb-wrap"><img class="thumb" src="${item.image}" alt="">${item.video ? '<div class="thumb-play">&#9654;</div>' : ''}</div>`
+                : `<div class="thumb-placeholder">+</div>`
+            }
+            <div class="item-meta">
+                <div class="item-title">${escHtml(item.title || 'Başlıksız')}</div>
+                <div class="item-badge">
+                    ${item.storyLines?.length ? `${item.storyLines.length} satır` : ''}${item.video ? `${item.storyLines?.length ? ' · ' : ''}&#9654; video` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // Drag & drop for reorder
+    list.querySelectorAll('.sidebar-item').forEach(el => {
+        el.addEventListener('dragstart', e => {
+            el.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', el.dataset.index);
+        });
+        el.addEventListener('dragend', () => el.classList.remove('dragging'));
+        el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+        el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+        el.addEventListener('drop', async e => {
+            e.preventDefault();
+            el.classList.remove('drag-over');
+            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+            const toIdx = parseInt(el.dataset.index);
+            if (fromIdx !== toIdx) {
+                const [moved] = items.splice(fromIdx, 1);
+                items.splice(toIdx, 0, moved);
+                await saveItems();
+                renderSidebar();
+                toast('Sıralama güncellendi');
+            }
+        });
+    });
+}
+
+// ─── ADD / SELECT / DELETE ───
+async function addNewItem() {
+    const item = {
+        id: genId(),
+        title: '',
+        subtitle: '',
+        image: null,
+        position: 'left',
+        video: null,
+        storyLines: []
+    };
+    items.push(item);
+    await saveItems();
+    selectItem(item.id);
+    renderSidebar();
+    toast('Yeni çalışma eklendi');
+}
+
+function selectItem(id) {
+    activeId = id;
+    renderSidebar();
+    loadEditor();
+}
+
+async function deleteCurrentItem() {
+    if (!activeId) return;
+    if (!confirm('Bu çalışmayı silmek istediğinden emin misin?')) return;
+    const delItem = items.find(it => it.id === activeId);
+    if (delItem) {
+        if (delItem.image) await deleteFile(delItem.image);
+        if (delItem.video) await deleteFile(delItem.video);
+    }
+    items = items.filter(it => it.id !== activeId);
+    await saveItems();
+    activeId = null;
+    renderSidebar();
+    loadEditor();
+    toast('Çalışma silindi');
+}
+
+// ─── EDITOR ───
+function loadEditor() {
+    const empty = document.getElementById('editorEmpty');
+    const form = document.getElementById('editorForm');
+
+    if (!activeId) {
+        empty.style.display = 'flex';
+        form.style.display = 'none';
+        return;
+    }
+
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+
+    empty.style.display = 'none';
+    form.style.display = 'block';
+
+    document.getElementById('inputTitle').value = item.title || '';
+    document.getElementById('inputSubtitle').value = item.subtitle || '';
+
+    // Image
+    const preview = document.getElementById('imagePreview');
+    const uploadText = document.getElementById('uploadText');
+    const removeBtn = document.getElementById('removeImg');
+    const uploadDiv = document.getElementById('imageUpload');
+    if (item.image) {
+        preview.src = item.image;
+        preview.style.display = 'block';
+        uploadText.style.display = 'none';
+        removeBtn.style.display = 'flex';
+        uploadDiv.classList.add('has-image');
+    } else {
+        preview.style.display = 'none';
+        uploadText.style.display = 'block';
+        removeBtn.style.display = 'none';
+        uploadDiv.classList.remove('has-image');
+    }
+
+    // Video
+    const videoPreview = document.getElementById('videoPreview');
+    const uploadTextVideo = document.getElementById('uploadTextVideo');
+    const removeVideoBtn = document.getElementById('removeVideoBtn');
+    const videoUploadDiv = document.getElementById('videoUpload');
+    if (item.video) {
+        videoPreview.src = item.video;
+        videoPreview.style.display = 'block';
+        uploadTextVideo.style.display = 'none';
+        removeVideoBtn.style.display = 'flex';
+        videoUploadDiv.classList.add('has-image');
+    } else {
+        videoPreview.style.display = 'none';
+        videoPreview.removeAttribute('src');
+        uploadTextVideo.style.display = 'block';
+        removeVideoBtn.style.display = 'none';
+        videoUploadDiv.classList.remove('has-image');
+    }
+
+    selectPosition(item.position || 'left', false);
+    renderStoryLines(item.storyLines || []);
+    updatePreview(item);
+}
+
+function updatePreview(item) {
+    const section = document.getElementById('previewSection');
+    const img = document.getElementById('previewImg');
+    const vid = document.getElementById('previewVid');
+
+    vid.removeAttribute('src');
+    vid.classList.remove('ready');
+
+    if (item.image && item.video) {
+        section.style.display = 'block';
+        img.src = item.image;
+        vid.src = item.video;
+        vid.addEventListener('loadeddata', function onLoad() {
+            vid.classList.add('ready');
+            vid.removeEventListener('loadeddata', onLoad);
+        });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+// ─── POSITION PICKER ───
+function selectPosition(pos, updateItem = true) {
+    document.querySelectorAll('.pos-btn').forEach(b => {
+        b.classList.toggle('selected', b.dataset.pos === pos);
+    });
+    if (updateItem) {
+        const item = items.find(it => it.id === activeId);
+        if (item) {
+            item.position = pos;
+            saveItems();
+        }
+    }
+}
+
+// Preview hover handlers
+const previewCard = document.getElementById('previewCard');
+previewCard.addEventListener('mouseenter', () => {
+    const vid = document.getElementById('previewVid');
+    if (vid.src) { vid.currentTime = 0; vid.play().catch(() => {}); }
+});
+previewCard.addEventListener('mouseleave', () => {
+    document.getElementById('previewVid').pause();
+});
+
+// ─── IMAGE HANDLING ───
+document.getElementById('fileInput').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast('Dosya çok büyük (max 5MB)'); return; }
+
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+
+    // Delete old image if exists
+    if (item.image) await deleteFile(item.image);
+
+    const url = await uploadFile(file, 'image');
+    item.image = url;
+    await saveItems();
+    loadEditor();
+    renderSidebar();
+    toast('Görsel yüklendi');
+    this.value = '';
+});
+
+const uploadArea = document.getElementById('imageUpload');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#c9a96e'; });
+uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('fileInput').files = dt.files;
+        document.getElementById('fileInput').dispatchEvent(new Event('change'));
+    }
+});
+
+async function removeImage(e) {
+    e.stopPropagation();
+    const item = items.find(it => it.id === activeId);
+    if (item && item.image) {
+        await deleteFile(item.image);
+        item.image = null;
+        await saveItems();
+        loadEditor();
+        renderSidebar();
+    }
+}
+
+// ─── VIDEO HANDLING ───
+document.getElementById('fileInputVideo').addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { toast('Video çok büyük (max 50MB)'); return; }
+
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+
+    if (item.video) await deleteFile(item.video);
+
+    const url = await uploadFile(file, 'video');
+    item.video = url;
+    await saveItems();
+    loadEditor();
+    renderSidebar();
+    toast('Video yüklendi');
+    this.value = '';
+});
+
+const videoUpArea = document.getElementById('videoUpload');
+videoUpArea.addEventListener('dragover', e => { e.preventDefault(); videoUpArea.style.borderColor = '#c9a96e'; });
+videoUpArea.addEventListener('dragleave', () => { videoUpArea.style.borderColor = ''; });
+videoUpArea.addEventListener('drop', e => {
+    e.preventDefault();
+    videoUpArea.style.borderColor = '';
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type === 'video/mp4' || file.type === 'video/webm')) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('fileInputVideo').files = dt.files;
+        document.getElementById('fileInputVideo').dispatchEvent(new Event('change'));
+    }
+});
+
+async function removeVideo(e) {
+    e.stopPropagation();
+    const item = items.find(it => it.id === activeId);
+    if (item && item.video) {
+        await deleteFile(item.video);
+        item.video = null;
+        await saveItems();
+        loadEditor();
+        renderSidebar();
+    }
+}
+
+// ─── STORY LINES ───
+function renderStoryLines(lines) {
+    document.getElementById('storyLines').innerHTML = lines.map((line, i) => `
+        <div class="story-line-row" data-index="${i}">
+            <div class="line-num">${i + 1}</div>
+            <div class="line-fields">
+                <input class="label-input" type="text" placeholder="etiket (ör: ilham)"
+                       value="${escHtml(line.label || '')}"
+                       oninput="updateStoryLine(${i}, 'label', this.value)">
+                <input type="text" placeholder="Hikaye metni..."
+                       value="${escHtml(line.text || '')}"
+                       oninput="updateStoryLine(${i}, 'text', this.value)">
+            </div>
+            <button class="remove-line" onclick="removeStoryLine(${i})" title="Sil">&#10005;</button>
+        </div>
+    `).join('');
+}
+
+function addStoryLine() {
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+    if (!item.storyLines) item.storyLines = [];
+    item.storyLines.push({ label: '', text: '' });
+    saveItems();
+    renderStoryLines(item.storyLines);
+    renderSidebar();
+}
+
+function updateStoryLine(index, field, value) {
+    const item = items.find(it => it.id === activeId);
+    if (!item || !item.storyLines[index]) return;
+    item.storyLines[index][field] = value;
+    saveItems();
+}
+
+function removeStoryLine(index) {
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+    item.storyLines.splice(index, 1);
+    saveItems();
+    renderStoryLines(item.storyLines);
+    renderSidebar();
+}
+
+// ─── SAVE TEXT FIELDS ───
+async function saveCurrentItem() {
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+    item.title = document.getElementById('inputTitle').value.trim();
+    item.subtitle = document.getElementById('inputSubtitle').value.trim();
+    await saveItems();
+    renderSidebar();
+    toast('Kaydedildi');
+}
+
+['inputTitle', 'inputSubtitle'].forEach(id => {
+    document.getElementById(id).addEventListener('blur', saveCurrentItem);
+});
+
+// ─── EXPORT / IMPORT ───
+function exportData() {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cancaglar-portfolio.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('JSON olarak indirildi');
+}
+
+async function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    try {
+        const imported = JSON.parse(text);
+        if (Array.isArray(imported)) {
+            items = imported;
+            await saveItems();
+            activeId = null;
+            renderSidebar();
+            loadEditor();
+            toast(`${items.length} çalışma içe aktarıldı`);
+        }
+    } catch {
+        toast('Geçersiz JSON dosyası');
+    }
+}
+
+function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+// ─── START ───
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Can Çağlar Bad - Hair Artist</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0a0a0a;
+            --bg-subtle: #111;
+            --text: #f5f0eb;
+            --text-muted: #999;
+            --text-dim: #555;
+            --accent: #c9a96e;
+            --accent-light: #e8d5a3;
+            --accent-alpha: rgba(201, 169, 110, 0.3);
+            --accent-ring: rgba(201, 169, 110, 0.5);
+            --card-shadow: rgba(0,0,0,0.8);
+            --divider: #333;
+        }
+        [data-theme="warm-white"] {
+            --bg: #faf8f5; --bg-subtle: #f0ece6; --text: #2a2520; --text-muted: #6b6157;
+            --text-dim: #a69d93; --accent: #8b6d47; --accent-light: #b8956a;
+            --accent-alpha: rgba(139,109,71,0.25); --accent-ring: rgba(139,109,71,0.4);
+            --card-shadow: rgba(0,0,0,0.4);
+            --divider: #d9d0c5;
+        }
+        [data-theme="bej"] {
+            --bg: #e8e0d4; --bg-subtle: #ddd4c6; --text: #3a332b; --text-muted: #7a7068;
+            --text-dim: #b0a699; --accent: #6b5840; --accent-light: #9a8265;
+            --accent-alpha: rgba(107,88,64,0.25); --accent-ring: rgba(107,88,64,0.4);
+            --card-shadow: rgba(0,0,0,0.35);
+            --divider: #c5baa9;
+        }
+        [data-theme="grey"] {
+            --bg: #2c2c2e; --bg-subtle: #3a3a3c; --text: #e5e5e7; --text-muted: #a1a1a3;
+            --text-dim: #636366; --accent: #c9a96e; --accent-light: #e0c88f;
+            --accent-alpha: rgba(201,169,110,0.25); --accent-ring: rgba(201,169,110,0.4);
+            --card-shadow: rgba(0,0,0,0.6);
+            --divider: #4a4a4c;
+        }
+        [data-theme="white"] {
+            --bg: #ffffff; --bg-subtle: #f5f5f5; --text: #1a1a1a; --text-muted: #666;
+            --text-dim: #aaa; --accent: #b08d57; --accent-light: #d4b37a;
+            --accent-alpha: rgba(176,141,87,0.2); --accent-ring: rgba(176,141,87,0.4);
+            --card-shadow: rgba(0,0,0,0.3);
+            --divider: #e0e0e0;
+        }
+
+        body {
+            background: var(--bg); color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh; overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* ─── THEME PICKER ─── */
+        .theme-picker {
+            position: fixed; top: 20px; right: 20px; z-index: 9998;
+            display: flex; gap: 8px; padding: 10px 14px;
+            background: var(--bg-subtle); border: 1px solid var(--divider);
+            border-radius: 40px; transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .theme-picker .theme-label {
+            font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--text-dim); align-self: center; margin-right: 4px;
+        }
+        .theme-btn {
+            width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+            cursor: pointer; transition: border-color 0.3s, transform 0.2s;
+        }
+        .theme-btn:hover { transform: scale(1.15); }
+        .theme-btn.active { border-color: var(--accent); transform: scale(1.1); }
+        .theme-btn[data-set-theme="dark"]       { background: #0a0a0a; }
+        .theme-btn[data-set-theme="grey"]        { background: #2c2c2e; }
+        .theme-btn[data-set-theme="bej"]         { background: #e8e0d4; }
+        .theme-btn[data-set-theme="warm-white"]  { background: #faf8f5; }
+        .theme-btn[data-set-theme="white"]       { background: #ffffff; }
+
+        /* ─── HEADER ─── */
+        header { text-align: center; padding: 60px 20px 20px; }
+        header h1 {
+            font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 400;
+            letter-spacing: 0.15em; color: var(--accent); transition: color 0.5s;
+        }
+        header p {
+            font-size: 0.9rem; letter-spacing: 0.3em; text-transform: uppercase;
+            color: var(--text-muted); margin-top: 8px;
+        }
+        .subtitle {
+            text-align: center; font-family: 'Playfair Display', serif; font-style: italic;
+            font-size: 1.1rem; color: var(--text-muted); margin-bottom: 20px;
+        }
+
+        /* ─── GALLERY ITEM ─── */
+        .gallery-item {
+            display: flex; max-width: 1100px; margin: 0 auto 50px;
+            padding: 0 30px; gap: 40px; align-items: flex-start;
+        }
+        .gallery-item .gallery-img {
+            flex-shrink: 0; width: 420px; border-radius: 8px; overflow: hidden;
+            cursor: pointer; transition: transform 0.3s ease;
+        }
+        .gallery-item .gallery-img:hover { transform: translateY(-4px); }
+        .gallery-item .gallery-img img { width: 100%; display: block; border-radius: 8px; }
+        .gallery-item .gallery-text {
+            flex: 1; padding-top: 20px;
+        }
+        .gallery-item .gallery-text h3 {
+            font-family: 'Playfair Display', serif; font-size: 1.6rem;
+            font-weight: 400; color: var(--accent); margin-bottom: 8px;
+        }
+        .gallery-item .gallery-text .gallery-subtitle {
+            font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--text-dim); margin-bottom: 20px;
+        }
+        .gallery-item .gallery-text .gallery-line {
+            margin-bottom: 14px; padding-left: 16px;
+            border-left: 2px solid var(--accent-alpha);
+        }
+        .gallery-item .gallery-text .gallery-line .line-label {
+            font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--accent); margin-bottom: 3px;
+        }
+        .gallery-item .gallery-text .gallery-line .line-text {
+            font-family: 'Playfair Display', serif; font-style: italic;
+            font-size: 1rem; line-height: 1.6; color: var(--text-muted);
+        }
+
+        /* ─── VIDEO OVERLAY ─── */
+        .gallery-img { position: relative; }
+        .gallery-video {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            object-fit: cover; opacity: 0; transition: opacity 0.5s ease;
+            border-radius: 8px;
+        }
+        .gallery-img:hover .gallery-video.ready { opacity: 1; }
+        .video-hint {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(0,0,0,0.55); color: #fff;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .gallery-img:hover .video-hint { opacity: 0; }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            z-index: 10000; display: none; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+        .lightbox.open { display: flex; }
+        .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; cursor: default; }
+        .lightbox .lb-close {
+            position: absolute; top: 20px; right: 25px; color: #fff; font-size: 1.5rem;
+            cursor: pointer; background: none; border: none;
+        }
+
+        .divider {
+            text-align: center; padding: 40px 0; color: var(--divider);
+            font-size: 1.5rem; letter-spacing: 0.5em;
+        }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
+            text-align: center; padding: 100px 20px; color: var(--text-dim);
+        }
+        .empty-state .empty-icon { font-size: 3rem; margin-bottom: 15px; }
+        .empty-state a { color: var(--accent); }
+
+        footer {
+            text-align: center; padding: 60px 20px; color: var(--divider); font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Theme Picker -->
+<div class="theme-picker">
+    <span class="theme-label">tema</span>
+    <button class="theme-btn active" data-set-theme="dark" title="Siyah"></button>
+    <button class="theme-btn" data-set-theme="grey" title="Koyu Gri"></button>
+    <button class="theme-btn" data-set-theme="bej" title="Bej"></button>
+    <button class="theme-btn" data-set-theme="warm-white" title="Sıcak Beyaz"></button>
+    <button class="theme-btn" data-set-theme="white" title="Beyaz"></button>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lb-close">&#10005;</button>
+    <img id="lbImage" src="" alt="">
+</div>
+
+<header>
+    <h1>CAN ÇAĞLAR BAD</h1>
+    <p>Hair Artist &middot; Istanbul</p>
+</header>
+<p class="subtitle">"Ruhunu saçına işle"</p>
+
+<!-- Dynamic content -->
+<div id="content"></div>
+
+<footer>
+    <p>Can Çağlar Bad &middot; Hair Artist &middot; Istanbul</p>
+</footer>
+
+<script>
+// Theme switching
+document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const t = btn.dataset.setTheme;
+        if (t === 'dark') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', t);
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// Lightbox
+function openLightbox(src) {
+    document.getElementById('lbImage').src = src;
+    document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ─── LOAD & RENDER ───
+async function loadPortfolio() {
+    let items = [];
+    try {
+        const res = await fetch('/api/portfolio');
+        items = await res.json();
+    } catch(e) {}
+
+    const gallery = items.filter(it => it.image);
+
+    if (!gallery.length) {
+        document.getElementById('content').innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">&#10022;</div>
+                <p>Henüz içerik yok.</p>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+
+    gallery.forEach((item, i) => {
+        const hasText = item.title || item.subtitle || (item.storyLines && item.storyLines.length);
+        const pos = item.position || 'left';
+        html += `<div class="gallery-item" style="${pos === 'right' ? 'flex-direction:row-reverse' : ''}">`;
+        if (item.video) {
+            html += `<div class="gallery-img" data-has-video onclick="openLightbox('${esc(item.image)}')">
+                <img src="${esc(item.image)}" alt="${esc(item.title)}">
+                <video class="gallery-video" src="${esc(item.video)}" muted loop playsinline preload="metadata"></video>
+                <div class="video-hint">&#9654;</div>
+            </div>`;
+        } else {
+            html += `<div class="gallery-img" onclick="openLightbox('${esc(item.image)}')">
+                <img src="${esc(item.image)}" alt="${esc(item.title)}">
+            </div>`;
+        }
+        if (hasText) {
+            html += `<div class="gallery-text">`;
+            if (item.title) html += `<h3>${esc(item.title)}</h3>`;
+            if (item.subtitle) html += `<div class="gallery-subtitle">${esc(item.subtitle)}</div>`;
+            (item.storyLines || []).forEach(line => {
+                if (line.text) {
+                    html += `<div class="gallery-line">`;
+                    if (line.label) html += `<div class="line-label">${esc(line.label)}</div>`;
+                    html += `<div class="line-text">${esc(line.text)}</div>`;
+                    html += `</div>`;
+                }
+            });
+            html += `</div>`;
+        }
+        html += `</div>`;
+        if (i < gallery.length - 1) html += `<div class="divider">&middot; &middot; &middot;</div>`;
+    });
+
+    document.getElementById('content').innerHTML = html;
+    initVideos();
+}
+
+function initVideos() {
+    document.querySelectorAll('.gallery-img[data-has-video]').forEach(el => {
+        const video = el.querySelector('.gallery-video');
+        if (!video) return;
+        video.addEventListener('loadeddata', () => video.classList.add('ready'));
+        el.addEventListener('mouseenter', () => {
+            video.currentTime = 0;
+            video.play().catch(() => {});
+        });
+        el.addEventListener('mouseleave', () => video.pause());
+    });
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ─── START ───
+loadPortfolio();
+</script>
+</body>
+</html>
