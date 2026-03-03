@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    expose:
+      - "3000"
+    volumes:
+      - /opt/cancaglar/data:/app/data
+      - /opt/cancaglar/uploads:/app/uploads
+    restart: unless-stopped
