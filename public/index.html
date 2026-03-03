@@ -10,40 +10,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg: #0a0a0a;
-            --bg-subtle: #111;
-            --text: #f5f0eb;
-            --text-muted: #999;
-            --text-dim: #555;
-            --accent: #c9a96e;
-            --accent-light: #e8d5a3;
-            --accent-alpha: rgba(201, 169, 110, 0.3);
-            --accent-ring: rgba(201, 169, 110, 0.5);
-            --card-shadow: rgba(0,0,0,0.8);
-            --divider: #333;
-        }
-        [data-theme="warm-white"] {
-            --bg: #faf8f5; --bg-subtle: #f0ece6; --text: #2a2520; --text-muted: #6b6157;
-            --text-dim: #a69d93; --accent: #8b6d47; --accent-light: #b8956a;
-            --accent-alpha: rgba(139,109,71,0.25); --accent-ring: rgba(139,109,71,0.4);
-            --card-shadow: rgba(0,0,0,0.4);
-            --divider: #d9d0c5;
-        }
-        [data-theme="bej"] {
-            --bg: #e8e0d4; --bg-subtle: #ddd4c6; --text: #3a332b; --text-muted: #7a7068;
-            --text-dim: #b0a699; --accent: #6b5840; --accent-light: #9a8265;
-            --accent-alpha: rgba(107,88,64,0.25); --accent-ring: rgba(107,88,64,0.4);
-            --card-shadow: rgba(0,0,0,0.35);
-            --divider: #c5baa9;
-        }
-        [data-theme="grey"] {
-            --bg: #2c2c2e; --bg-subtle: #3a3a3c; --text: #e5e5e7; --text-muted: #a1a1a3;
-            --text-dim: #636366; --accent: #c9a96e; --accent-light: #e0c88f;
-            --accent-alpha: rgba(201,169,110,0.25); --accent-ring: rgba(201,169,110,0.4);
-            --card-shadow: rgba(0,0,0,0.6);
-            --divider: #4a4a4c;
-        }
-        [data-theme="white"] {
             --bg: #ffffff; --bg-subtle: #f5f5f5; --text: #1a1a1a; --text-muted: #666;
             --text-dim: #aaa; --accent: #b08d57; --accent-light: #d4b37a;
             --accent-alpha: rgba(176,141,87,0.2); --accent-ring: rgba(176,141,87,0.4);
@@ -55,31 +21,7 @@
             background: var(--bg); color: var(--text);
             font-family: 'Inter', sans-serif;
             min-height: 100vh; overflow-x: hidden;
-            transition: background 0.5s ease, color 0.5s ease;
         }
-
-        /* ─── THEME PICKER ─── */
-        .theme-picker {
-            position: fixed; top: 20px; right: 20px; z-index: 9998;
-            display: flex; gap: 8px; padding: 10px 14px;
-            background: var(--bg-subtle); border: 1px solid var(--divider);
-            border-radius: 40px; transition: background 0.5s ease, border-color 0.5s ease;
-        }
-        .theme-picker .theme-label {
-            font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase;
-            color: var(--text-dim); align-self: center; margin-right: 4px;
-        }
-        .theme-btn {
-            width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
-            cursor: pointer; transition: border-color 0.3s, transform 0.2s;
-        }
-        .theme-btn:hover { transform: scale(1.15); }
-        .theme-btn.active { border-color: var(--accent); transform: scale(1.1); }
-        .theme-btn[data-set-theme="dark"]       { background: #0a0a0a; }
-        .theme-btn[data-set-theme="grey"]        { background: #2c2c2e; }
-        .theme-btn[data-set-theme="bej"]         { background: #e8e0d4; }
-        .theme-btn[data-set-theme="warm-white"]  { background: #faf8f5; }
-        .theme-btn[data-set-theme="white"]       { background: #ffffff; }
 
         /* ─── HEADER ─── */
         header { text-align: center; padding: 60px 20px 20px; }
@@ -149,18 +91,41 @@
         }
         .gallery-img:hover .video-hint { opacity: 0; }
 
-        /* Lightbox */
+        /* Lightbox / Gallery Carousel */
         .lightbox {
             position: fixed; inset: 0; background: rgba(0,0,0,0.92);
             z-index: 10000; display: none; align-items: center; justify-content: center;
-            cursor: pointer;
         }
         .lightbox.open { display: flex; }
-        .lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 8px; cursor: default; }
         .lightbox .lb-close {
             position: absolute; top: 20px; right: 25px; color: #fff; font-size: 1.5rem;
-            cursor: pointer; background: none; border: none;
+            cursor: pointer; background: none; border: none; z-index: 2;
         }
+        .lightbox .lb-content {
+            max-width: 90vw; max-height: 90vh; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lightbox .lb-content img, .lightbox .lb-content video {
+            max-width: 90vw; max-height: 85vh; border-radius: 8px; display: block;
+        }
+        .lightbox .lb-content video { background: #000; }
+        .lb-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.12); border: none; color: #fff;
+            width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s; z-index: 2;
+        }
+        .lb-arrow:hover { background: rgba(255,255,255,0.25); }
+        .lb-arrow.lb-prev { left: 15px; }
+        .lb-arrow.lb-next { right: 15px; }
+        .lb-counter {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.6); font-size: 0.8rem; letter-spacing: 0.1em;
+            z-index: 2;
+        }
+        .lb-arrow.hidden { display: none; }
+        .lb-counter.hidden { display: none; }
 
         .divider {
             text-align: center; padding: 40px 0; color: var(--divider);
@@ -181,20 +146,13 @@
 </head>
 <body>
 
-<!-- Theme Picker -->
-<div class="theme-picker">
-    <span class="theme-label">tema</span>
-    <button class="theme-btn active" data-set-theme="dark" title="Siyah"></button>
-    <button class="theme-btn" data-set-theme="grey" title="Koyu Gri"></button>
-    <button class="theme-btn" data-set-theme="bej" title="Bej"></button>
-    <button class="theme-btn" data-set-theme="warm-white" title="Sıcak Beyaz"></button>
-    <button class="theme-btn" data-set-theme="white" title="Beyaz"></button>
-</div>
-
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <button class="lb-close">&#10005;</button>
-    <img id="lbImage" src="" alt="">
+<!-- Lightbox / Gallery Carousel -->
+<div class="lightbox" id="lightbox">
+    <button class="lb-close" onclick="closeLightbox()">&#10005;</button>
+    <button class="lb-arrow lb-prev" onclick="lbNav(-1)">&#10094;</button>
+    <div class="lb-content" id="lbContent"></div>
+    <button class="lb-arrow lb-next" onclick="lbNav(1)">&#10095;</button>
+    <div class="lb-counter" id="lbCounter"></div>
 </div>
 
 <header>
@@ -211,26 +169,67 @@
 </footer>
 
 <script>
-// Theme switching
-document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const t = btn.dataset.setTheme;
-        if (t === 'dark') document.documentElement.removeAttribute('data-theme');
-        else document.documentElement.setAttribute('data-theme', t);
-        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    });
-});
+// Gallery Lightbox
+let lbSlides = [];
+let lbIndex = 0;
 
-// Lightbox
-function openLightbox(src) {
-    document.getElementById('lbImage').src = src;
+function openLightbox(slides, startIndex) {
+    lbSlides = slides;
+    lbIndex = startIndex || 0;
     document.getElementById('lightbox').classList.add('open');
+    lbRender();
 }
+
 function closeLightbox() {
     document.getElementById('lightbox').classList.remove('open');
+    // Pause any playing video
+    const vid = document.querySelector('#lbContent video');
+    if (vid) vid.pause();
+    lbSlides = [];
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+function lbNav(dir) {
+    const vid = document.querySelector('#lbContent video');
+    if (vid) vid.pause();
+    lbIndex = (lbIndex + dir + lbSlides.length) % lbSlides.length;
+    lbRender();
+}
+
+function lbRender() {
+    const content = document.getElementById('lbContent');
+    const slide = lbSlides[lbIndex];
+    if (slide.type === 'video') {
+        content.innerHTML = `<video src="${esc(slide.url)}" controls autoplay style="max-width:90vw;max-height:85vh;border-radius:8px;background:#000"></video>`;
+    } else {
+        content.innerHTML = `<img src="${esc(slide.url)}" alt="">`;
+    }
+    // Arrows visibility
+    const prev = document.querySelector('.lb-prev');
+    const next = document.querySelector('.lb-next');
+    const counter = document.getElementById('lbCounter');
+    if (lbSlides.length <= 1) {
+        prev.classList.add('hidden');
+        next.classList.add('hidden');
+        counter.classList.add('hidden');
+    } else {
+        prev.classList.remove('hidden');
+        next.classList.remove('hidden');
+        counter.classList.remove('hidden');
+        counter.textContent = `${lbIndex + 1} / ${lbSlides.length}`;
+    }
+}
+
+// Close on backdrop click
+document.getElementById('lightbox').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLightbox();
+});
+
+document.addEventListener('keydown', e => {
+    if (!document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lbNav(-1);
+    if (e.key === 'ArrowRight') lbNav(1);
+});
 
 // ─── LOAD & RENDER ───
 async function loadPortfolio() {
@@ -254,17 +253,24 @@ async function loadPortfolio() {
     let html = '';
 
     gallery.forEach((item, i) => {
+        // Build slides: main image first, then gallery items
+        const slides = [{ url: item.image, type: 'image' }];
+        if (item.gallery && item.gallery.length) {
+            item.gallery.forEach(g => slides.push({ url: g.url, type: g.type }));
+        }
+        const slidesJson = esc(JSON.stringify(slides));
+
         const hasText = item.title || item.subtitle || (item.storyLines && item.storyLines.length);
         const pos = item.position || 'left';
         html += `<div class="gallery-item" style="${pos === 'right' ? 'flex-direction:row-reverse' : ''}">`;
         if (item.video) {
-            html += `<div class="gallery-img" data-has-video onclick="openLightbox('${esc(item.image)}')">
+            html += `<div class="gallery-img" data-has-video data-slides="${slidesJson}">
                 <img src="${esc(item.image)}" alt="${esc(item.title)}">
                 <video class="gallery-video" src="${esc(item.video)}" muted loop playsinline preload="metadata"></video>
                 <div class="video-hint">&#9654;</div>
             </div>`;
         } else {
-            html += `<div class="gallery-img" onclick="openLightbox('${esc(item.image)}')">
+            html += `<div class="gallery-img" data-slides="${slidesJson}">
                 <img src="${esc(item.image)}" alt="${esc(item.title)}">
             </div>`;
         }
@@ -288,6 +294,7 @@ async function loadPortfolio() {
 
     document.getElementById('content').innerHTML = html;
     initVideos();
+    initGalleryClicks();
 }
 
 function initVideos() {
@@ -300,6 +307,17 @@ function initVideos() {
             video.play().catch(() => {});
         });
         el.addEventListener('mouseleave', () => video.pause());
+    });
+}
+
+function initGalleryClicks() {
+    document.querySelectorAll('.gallery-img[data-slides]').forEach(el => {
+        el.addEventListener('click', () => {
+            try {
+                const slides = JSON.parse(el.dataset.slides);
+                openLightbox(slides, 0);
+            } catch {}
+        });
     });
 }
 

@@ -128,7 +128,7 @@
             width: 100%; max-height: 400px; object-fit: contain;
             display: block; border-radius: 6px;
         }
-        .image-upload input[type="file"] { display: none; }
+        .image-upload input[type="file"] { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
         .image-upload .remove-img {
             position: absolute; top: 10px; right: 10px;
             background: rgba(0,0,0,0.7); border: 1px solid #444;
@@ -200,6 +200,33 @@
             pointer-events: none;
         }
 
+        /* Gallery editor */
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px; margin-top: 8px;
+        }
+        .gallery-thumb {
+            position: relative; border-radius: 6px; overflow: hidden;
+            aspect-ratio: 1; background: #222;
+        }
+        .gallery-thumb img, .gallery-thumb video {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .gallery-thumb .gallery-remove {
+            position: absolute; top: 4px; right: 4px;
+            background: rgba(0,0,0,0.7); border: none; color: #ccc;
+            width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+            font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+        }
+        .gallery-thumb .gallery-remove:hover { background: #e74c3c; color: #fff; }
+        .gallery-add-btn {
+            display: flex; align-items: center; justify-content: center;
+            border: 2px dashed #333; border-radius: 6px; aspect-ratio: 1;
+            cursor: pointer; color: #555; font-size: 1.5rem; transition: all 0.2s;
+            background: none;
+        }
+        .gallery-add-btn:hover { border-color: #c9a96e; color: #c9a96e; }
+
         /* Hover preview */
         .preview-section {
             margin-top: 30px; padding-top: 20px; border-top: 1px solid #2a2a2a;
@@ -260,7 +287,7 @@
         <div id="editorForm" style="display:none">
             <div class="field">
                 <label>Görsel</label>
-                <div class="image-upload" id="imageUpload" onclick="document.getElementById('fileInput').click()">
+                <div class="image-upload" id="imageUpload">
                     <div class="upload-text" id="uploadText">
                         Sürükle bırak veya <span>dosya seç</span><br>
                         <small style="color:#444">JPG, PNG — max 5MB</small>
@@ -273,7 +300,7 @@
 
             <div class="field">
                 <label>Video <span style="color:#555; text-transform:none; letter-spacing:0">— üzerine gelince oynatılır (opsiyonel)</span></label>
-                <div class="image-upload" id="videoUpload" onclick="document.getElementById('fileInputVideo').click()">
+                <div class="image-upload" id="videoUpload">
                     <div class="upload-text" id="uploadTextVideo">
                         Sürükle bırak veya <span>dosya seç</span><br>
                         <small style="color:#444">MP4, WebM — max 50MB</small>
@@ -282,6 +309,12 @@
                     <video id="videoPreview" style="display:none; width:100%; max-height:300px; border-radius:6px;" muted controls></video>
                     <button class="remove-img" id="removeVideoBtn" style="display:none" onclick="removeVideo(event)">&#10005;</button>
                 </div>
+            </div>
+
+            <div class="field">
+                <label>Galeri <span style="color:#555; text-transform:none; letter-spacing:0">— resme tıklayınca açılan ek görseller/videolar (opsiyonel)</span></label>
+                <div class="gallery-grid" id="galleryGrid"></div>
+                <input type="file" id="fileInputGallery" accept="image/*,video/mp4,video/webm" multiple style="position:absolute; opacity:0; pointer-events:none; width:0; height:0;">
             </div>
 
             <div class="field">
@@ -441,7 +474,8 @@ async function addNewItem() {
         image: null,
         position: 'left',
         video: null,
-        storyLines: []
+        storyLines: [],
+        gallery: []
     };
     items.push(item);
     await saveItems();
@@ -463,6 +497,9 @@ async function deleteCurrentItem() {
     if (delItem) {
         if (delItem.image) await deleteFile(delItem.image);
         if (delItem.video) await deleteFile(delItem.video);
+        if (delItem.gallery) {
+            for (const g of delItem.gallery) await deleteFile(g.url);
+        }
     }
     items = items.filter(it => it.id !== activeId);
     await saveItems();
@@ -531,6 +568,7 @@ function loadEditor() {
 
     selectPosition(item.position || 'left', false);
     renderStoryLines(item.storyLines || []);
+    renderGallery(item.gallery || []);
     updatePreview(item);
 }
 
@@ -601,6 +639,10 @@ document.getElementById('fileInput').addEventListener('change', async function(e
 });
 
 const uploadArea = document.getElementById('imageUpload');
+uploadArea.addEventListener('click', e => {
+    if (e.target.closest('.remove-img')) return;
+    document.getElementById('fileInput').click();
+});
 uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#c9a96e'; });
 uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
 uploadArea.addEventListener('drop', e => {
@@ -648,6 +690,10 @@ document.getElementById('fileInputVideo').addEventListener('change', async funct
 });
 
 const videoUpArea = document.getElementById('videoUpload');
+videoUpArea.addEventListener('click', e => {
+    if (e.target.closest('.remove-img')) return;
+    document.getElementById('fileInputVideo').click();
+});
 videoUpArea.addEventListener('dragover', e => { e.preventDefault(); videoUpArea.style.borderColor = '#c9a96e'; });
 videoUpArea.addEventListener('dragleave', () => { videoUpArea.style.borderColor = ''; });
 videoUpArea.addEventListener('drop', e => {
@@ -673,6 +719,52 @@ async function removeVideo(e) {
         renderSidebar();
     }
 }
+
+// ─── GALLERY ───
+function renderGallery(gallery) {
+    const grid = document.getElementById('galleryGrid');
+    grid.innerHTML = gallery.map((g, i) => `
+        <div class="gallery-thumb">
+            ${g.type === 'video'
+                ? `<video src="${escHtml(g.url)}" muted></video>`
+                : `<img src="${escHtml(g.url)}" alt="">`}
+            <button class="gallery-remove" onclick="removeGalleryItem(${i})" title="Sil">&#10005;</button>
+        </div>
+    `).join('') + `<button class="gallery-add-btn" onclick="document.getElementById('fileInputGallery').click()" title="Ekle">+</button>`;
+}
+
+async function removeGalleryItem(index) {
+    const item = items.find(it => it.id === activeId);
+    if (!item || !item.gallery) return;
+    const removed = item.gallery[index];
+    if (removed) await deleteFile(removed.url);
+    item.gallery.splice(index, 1);
+    await saveItems();
+    renderGallery(item.gallery);
+}
+
+document.getElementById('fileInputGallery').addEventListener('change', async function(e) {
+    const item = items.find(it => it.id === activeId);
+    if (!item) return;
+    if (!item.gallery) item.gallery = [];
+
+    for (const file of e.target.files) {
+        const isVideo = file.type.startsWith('video/');
+        const type = isVideo ? 'video' : 'image';
+        const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast(`${file.name} çok büyük (max ${isVideo ? '50' : '5'}MB)`);
+            continue;
+        }
+        const url = await uploadFile(file, type);
+        item.gallery.push({ url, type });
+    }
+
+    await saveItems();
+    renderGallery(item.gallery);
+    toast('Galeri güncellendi');
+    this.value = '';
+});
 
 // ─── STORY LINES ───
 function renderStoryLines(lines) {
