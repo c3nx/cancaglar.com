@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="32" cy="32" r="32" fill="#b08d57"/>
+  <text x="32" y="33" text-anchor="middle" dominant-baseline="central"
+        font-family="Georgia, 'Times New Roman', 'Playfair Display', serif"
+        font-size="40" fill="#ffffff">C</text>
+</svg>
