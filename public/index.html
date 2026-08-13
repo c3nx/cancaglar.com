@@ -43,6 +43,8 @@
             display: flex; max-width: 1100px; margin: 0 auto 50px;
             padding: 0 30px; gap: 40px; align-items: flex-start;
         }
+        /* Ters yerleşim: inline style yerine class — mobilde media query ezebilsin */
+        .gallery-item.reverse { flex-direction: row-reverse; }
         .gallery-item .gallery-img {
             flex-shrink: 0; width: 420px; border-radius: 8px; overflow: hidden;
             cursor: pointer; transition: transform 0.3s ease;
@@ -81,6 +83,8 @@
             border-radius: 8px;
         }
         .gallery-img:hover .gallery-video.ready { opacity: 1; }
+        /* Dokunmatikte oynatma kararını JS verir; görünürlük de ona bağlı */
+        .gallery-video.playing { opacity: 1; }
         .video-hint {
             position: absolute; top: 12px; left: 12px;
             background: rgba(0,0,0,0.55); color: #fff;
@@ -90,6 +94,7 @@
             transition: opacity 0.3s;
         }
         .gallery-img:hover .video-hint { opacity: 0; }
+        .gallery-video.playing ~ .video-hint { display: none; }
 
         /* Lightbox / Gallery Carousel */
         .lightbox {
@@ -140,7 +145,61 @@
         .empty-state a { color: var(--accent); }
 
         footer {
-            text-align: center; padding: 60px 20px; color: var(--divider); font-size: 0.75rem;
+            text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 0.75rem;
+        }
+        .ig-link {
+            display: inline-flex; align-items: center; gap: 9px;
+            margin-bottom: 22px; padding: 13px 20px;
+            border: 1px solid var(--divider); border-radius: 999px;
+            color: var(--text); text-decoration: none;
+            font-size: 0.85rem; letter-spacing: 0.05em;
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .ig-link svg { color: var(--accent); flex-shrink: 0; }
+        .ig-link:hover { color: var(--accent); border-color: var(--accent-ring); }
+        .ig-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+        /* ─── TABLET: görsel esnesin, metne yer kalsın ─── */
+        @media (max-width: 900px) {
+            .gallery-item { gap: 28px; padding: 0 24px; }
+            .gallery-item .gallery-img { width: 46%; }
+        }
+
+        /* ─── MOBİL: görsel tam genişlik, hikaye altına ─── */
+        @media (max-width: 700px) {
+            header { padding: 40px 20px 16px; }
+            header h1 { font-size: 2rem; letter-spacing: 0.08em; }
+            header p { font-size: 0.75rem; letter-spacing: 0.2em; }
+            .subtitle { font-size: 1rem; padding: 0 20px; margin-bottom: 30px; }
+
+            .gallery-item,
+            .gallery-item.reverse { flex-direction: column; }
+            .gallery-item {
+                gap: 22px; padding: 0 20px; margin-bottom: 40px;
+            }
+            .gallery-item .gallery-img { width: 100%; }
+            .gallery-item .gallery-text { padding-top: 0; }
+            .gallery-item .gallery-text h3 { font-size: 1.4rem; }
+            .gallery-item .gallery-text .gallery-line { margin-bottom: 16px; }
+
+            .divider { padding: 26px 0; font-size: 1.2rem; }
+            footer { padding: 45px 20px; }
+
+            /* Lightbox: dokunma hedefleri ve kenar boşlukları */
+            .lightbox .lb-content img, .lightbox .lb-content video {
+                max-width: 94vw; max-height: 78vh;
+            }
+            .lightbox .lb-close {
+                top: 10px; right: 10px; font-size: 1.5rem; padding: 10px; line-height: 1;
+            }
+            .lb-arrow { width: 40px; height: 40px; }
+            .lb-arrow.lb-prev { left: 8px; }
+            .lb-arrow.lb-next { right: 8px; }
+        }
+
+        /* ─── DOKUNMATİK: parmak "hover" bıraktığında kalıcı kayma olmasın ─── */
+        @media (hover: none) {
+            .gallery-item .gallery-img:hover { transform: none; }
         }
     </style>
 </head>
@@ -148,10 +207,10 @@
 
 <!-- Lightbox / Gallery Carousel -->
 <div class="lightbox" id="lightbox">
-    <button class="lb-close" onclick="closeLightbox()">&#10005;</button>
-    <button class="lb-arrow lb-prev" onclick="lbNav(-1)">&#10094;</button>
+    <button class="lb-close" onclick="closeLightbox()" aria-label="Kapat">&#10005;</button>
+    <button class="lb-arrow lb-prev" onclick="lbNav(-1)" aria-label="Önceki">&#10094;</button>
     <div class="lb-content" id="lbContent"></div>
-    <button class="lb-arrow lb-next" onclick="lbNav(1)">&#10095;</button>
+    <button class="lb-arrow lb-next" onclick="lbNav(1)" aria-label="Sonraki">&#10095;</button>
     <div class="lb-counter" id="lbCounter"></div>
 </div>
 
@@ -165,6 +224,12 @@
 <div id="content"></div>
 
 <footer>
+    <a class="ig-link" href="https://www.instagram.com/cancaglarbad" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" aria-hidden="true">
+            <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.06 1.17-.26 1.8-.42 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.07.36-2.24.41-1.27.06-1.65.07-4.86.07s-3.59-.01-4.86-.07c-1.17-.06-1.82-.26-2.24-.42-.57-.22-.96-.48-1.38-.9-.42-.42-.69-.82-.9-1.38-.16-.42-.36-1.07-.42-2.24-.04-1.26-.06-1.65-.06-4.84s.02-3.59.06-4.86c.06-1.17.26-1.81.42-2.23.21-.57.48-.96.9-1.38.42-.42.81-.69 1.38-.9.42-.17 1.05-.36 2.22-.42 1.27-.04 1.65-.06 4.86-.06zM12 0C8.74 0 8.33.01 7.05.07c-1.28.06-2.15.26-2.91.56-.79.31-1.46.72-2.13 1.38C1.35 2.68.94 3.35.63 4.14.33 4.9.13 5.78.07 7.05.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.06 1.28.26 2.15.56 2.91.31.79.72 1.46 1.38 2.13.67.67 1.34 1.08 2.13 1.38.77.3 1.64.5 2.91.56C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.28-.06 2.15-.26 2.91-.56.79-.31 1.46-.72 2.13-1.38.67-.67 1.08-1.34 1.38-2.13.3-.77.5-1.64.56-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.06-1.28-.26-2.15-.56-2.91-.31-.79-.72-1.46-1.38-2.13C21.32 1.35 20.65.94 19.86.63c-.77-.3-1.64-.5-2.91-.56C15.67.01 15.26 0 12 0zm0 5.84a6.16 6.16 0 100 12.32 6.16 6.16 0 000-12.32zM12 16a4 4 0 110-8 4 4 0 010 8zm7.85-10.41a1.44 1.44 0 11-2.88 0 1.44 1.44 0 012.88 0z"/>
+        </svg>
+        <span>@cancaglarbad</span>
+    </a>
     <p>Can Çağlar Bad &middot; Hair Artist &middot; Istanbul</p>
 </footer>
 
@@ -173,7 +238,14 @@
 let lbSlides = [];
 let lbIndex = 0;
 
+let pausedByLightbox = [];
+
 function openLightbox(slides, startIndex) {
+    // Arkada kendiliğinden oynayan videoları duraklat
+    pausedByLightbox = [];
+    document.querySelectorAll('.gallery-video').forEach(v => {
+        if (!v.paused) { v.pause(); pausedByLightbox.push(v); }
+    });
     lbSlides = slides;
     lbIndex = startIndex || 0;
     document.getElementById('lightbox').classList.add('open');
@@ -186,6 +258,8 @@ function closeLightbox() {
     const vid = document.querySelector('#lbContent video');
     if (vid) vid.pause();
     lbSlides = [];
+    pausedByLightbox.forEach(v => v.play().catch(() => {}));
+    pausedByLightbox = [];
 }
 
 function lbNav(dir) {
@@ -231,6 +305,22 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') lbNav(1);
 });
 
+// Parmakla kaydırarak geçiş — video kontrollerine dokunurken tetiklenmesin
+let touchStartX = 0, touchStartY = 0;
+const lbEl = document.getElementById('lightbox');
+lbEl.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+lbEl.addEventListener('touchend', e => {
+    if (e.target.closest('video')) return;
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && lbSlides.length > 1) {
+        lbNav(dx > 0 ? -1 : 1);
+    }
+}, { passive: true });
+
 // ─── LOAD & RENDER ───
 async function loadPortfolio() {
     let items = [];
@@ -262,7 +352,7 @@ async function loadPortfolio() {
 
         const hasText = item.title || item.subtitle || (item.storyLines && item.storyLines.length);
         const pos = item.position || 'left';
-        html += `<div class="gallery-item" style="${pos === 'right' ? 'flex-direction:row-reverse' : ''}">`;
+        html += `<div class="gallery-item${pos === 'right' ? ' reverse' : ''}">`;
         if (item.video) {
             html += `<div class="gallery-img" data-has-video data-slides="${slidesJson}">
                 <img src="${esc(item.image)}" alt="${esc(item.title)}">
@@ -297,16 +387,39 @@ async function loadPortfolio() {
     initGalleryClicks();
 }
 
+// Dokunmatikte hover yok: video ekranın yarısına girince sessizce oynar, çıkınca durup başa sarar
+const videoObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        const video = e.target;
+        if (e.isIntersecting) {
+            video.classList.add('playing');
+            video.play().catch(() => video.classList.remove('playing'));
+        } else {
+            video.classList.remove('playing');
+            video.pause();
+            video.currentTime = 0;
+        }
+    });
+}, { threshold: 0.5 });
+
 function initVideos() {
+    const canHover = window.matchMedia('(hover: hover)').matches;
+
     document.querySelectorAll('.gallery-img[data-has-video]').forEach(el => {
         const video = el.querySelector('.gallery-video');
         if (!video) return;
         video.addEventListener('loadeddata', () => video.classList.add('ready'));
-        el.addEventListener('mouseenter', () => {
-            video.currentTime = 0;
-            video.play().catch(() => {});
-        });
-        el.addEventListener('mouseleave', () => video.pause());
+        video.addEventListener('playing', () => video.classList.add('ready'));
+
+        if (canHover) {
+            el.addEventListener('mouseenter', () => {
+                video.currentTime = 0;
+                video.play().catch(() => {});
+            });
+            el.addEventListener('mouseleave', () => video.pause());
+        } else {
+            videoObserver.observe(video);
+        }
     });
 }
 
