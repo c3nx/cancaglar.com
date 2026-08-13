@@ -2,3 +2,5 @@ node_modules/
 data/
 uploads/
 bun.lock
+.playwright-mcp/
+.DS_Store
